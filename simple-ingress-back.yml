@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "DEMO_2"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+    nginx.ingress.kubernetes.io/rewrite-target: /dt-api/
+  name: back-ingress
+  namespace: dtester
+  labels:
+    project: app-dtester
+spec:
+  tls:
+  - hosts:
+    - k8s-dtester.tk
+    secretName: dtester-tls
+  rules:
+  - host: k8s-dtester.tk
+    http:
+      paths:
+      - path: /dt-api/
+        backend:
+          serviceName: dtester-backend
+          servicePort: 80

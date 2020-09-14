@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dtester-mysql
+  namespace: dtester
+  labels:
+    project: app-dtester
+spec:
+  ports:
+  - port: 3306
+  selector:
+    project: mysql-dtester
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dtester-mysql
+  namespace: dtester
+  labels:
+    project: mysql-dtester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: mysql-dtester
+  template:
+    metadata:
+      labels:
+        project: mysql-dtester
+    spec:
+      initContainers:
+        - name: fetch
+          image: mwendler/wget
+          command: ["wget","--no-check-certificate","https://dtapi.if.ua/~yurkovskiy/dtapi_full.sql","-O","/docker-entrypoint-initdb.d/dtapi_full.sql"]
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d/
+              name: dtester-initdb-mysql
+      containers:
+      - name: dtester-mysql
+        image: mysql:5.7
+        envFrom:
+          - secretRef:
+              name: dtester-secret
+        ports:
+        - containerPort: 3306
+          name: dtester-mysql
+        volumeMounts:
+          - name: dtester-initdb-mysql
+            mountPath: /docker-entrypoint-initdb.d/
+          - name: dtester-mysql
+            mountPath: /var/lib/mysql
+          - name: dtester-secret-volume
+            mountPath: "/etc/dtester-secrets"
+            readOnly: true
+      volumes:
+        - name: dtester-mysql
+          persistentVolumeClaim:
+            claimName: dtester-pvc-mysql
+        - name: dtester-initdb-mysql
+          persistentVolumeClaim:
+            claimName: dtester-pvc-initdb
+        - name: dtester-secret-volume
+          secret:
+            secretName: dtester-secret

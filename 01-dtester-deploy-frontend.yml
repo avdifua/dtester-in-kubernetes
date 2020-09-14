@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dtester-frontend
+  namespace: dtester
+  labels:
+    project: app-dtester
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    project: front-dtester
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dtester-frontend
+  namespace: dtester
+  labels:
+    project: front-dtester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: front-dtester
+  template:
+    metadata:
+      labels:
+        project: front-dtester
+    spec:
+      containers:
+      - name: dtester-frontend
+        image: avdifua/private:kuber-front
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80

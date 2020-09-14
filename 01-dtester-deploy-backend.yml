@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dtester-backend
+  namespace: dtester
+  labels:
+    project: app-dtester
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    project: back-dtester
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dtester-backend
+  namespace: dtester
+  labels:
+    project: back-dtester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: back-dtester
+  template:
+    metadata:
+      labels:
+        project: back-dtester
+    spec:
+      containers:
+      - name: dtester-backend
+        image: avdifua/private:kuber-back
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          protocol: TCP
